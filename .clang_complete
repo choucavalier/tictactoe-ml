@@ -1,0 +1,4 @@
+-I./src
+-I./
+-Wall
+-std=c++11
