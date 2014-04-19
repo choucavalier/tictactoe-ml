@@ -6,7 +6,7 @@
 #include <fstream>
 
 #include "utils/make_unique.h"
-#include "bstates_manager.h"
+#include "bsm.h"
 #include "player.h"
 #include "board.h"
 
