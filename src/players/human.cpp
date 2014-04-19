@@ -27,7 +27,6 @@ short Human::get_move(std::shared_ptr<Board> board) const
     {
         cout << "Choose a move, player " << (short)this->id << " » ";
         cin >> move;
-        move--;
         if (find(pm->begin(), pm->end(), move) != pm->end()
                 && move < 10 && move > 0)
             break;

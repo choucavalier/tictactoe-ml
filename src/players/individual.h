@@ -1,13 +1,12 @@
 #ifndef INDIVIDUAL_H
 #define INDIVIDUAL_H
 
-#include <vector>
 #include <memory>
-#include <utility>
+#include <map>
 
 #include "player.h"
 
-typedef std::vector<std::pair<unsigned short, unsigned short>> Strategies;
+typedef std::map<std::string, std::string> Strategy;
 
 class Individual : public Player
 {
@@ -21,10 +20,10 @@ public:
 
     void mutate();
 
-    Strategies const* get_strategies();
+    std::string operator[](std::string const& board);
 
 private:
-    std::unique_ptr<Strategies> strategies;
+    std::unique_ptr<Strategy> strategy;
 };
 
 #endif

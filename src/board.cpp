@@ -22,10 +22,10 @@ const vector<Line> Board::END_LINES = {
 };
 
 
-Board::Board() : map("")
+Board::Board()
 {
     for (int i = 0; i < 10; ++i)
-        map[i] = 0;
+        this->map.push_back(0);
 }
 
 Board::~Board()
@@ -68,7 +68,7 @@ short Board::get_winner_id(string const& board)
             finished = false;
     }
     if (finished)
-        return 4;
+        return 3;
     return 0;
 }
 

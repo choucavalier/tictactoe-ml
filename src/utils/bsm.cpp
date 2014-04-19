@@ -24,13 +24,14 @@ void BSM::load(const string& path)
     {
         if (line.length() < 10)
             continue;
-        string board = line.substr(0, 10);
+        string board = BSM::board(line.substr(0, 10));
         BSM::states[board] = {};
     }
     for (auto& b : BSM::states)
-        for (auto& s : BSM::states)
-            if (BSM::is_successor(s.first, b.first))
-                b.second.push_back(s.first);
+        if (!Board::is_over(b.first))
+            for (auto& s : BSM::states)
+                if (BSM::is_successor(s.first, b.first))
+                    b.second.push_back(s.first);
     file.close();
 }
 
@@ -195,19 +196,16 @@ bool BSM::is_successor(std::string s, string f)
     if (s[0] != (f[0] + 1))
         return false;
     auto transforms = BSM::get_transforms(s);
+    transforms->push_back(s);
     for (auto& t : *transforms)
     {
-        short cell = 0;
-        bool found = 0;
+        short found = 0;
         for (short i = 1; i < 10; ++i)
-            if (found)
+            if (found > 1)
                 break;
             else if (t[i] != f[i])
-            {
-                found = 1;
-                cell = i;
-            }
-        if (found && t[cell] != 0 && f[cell])
+                found++;
+        if (found == 1)
             return true;
     }
     return false;
@@ -218,7 +216,6 @@ void BSM::print(std::string const& board)
     cout << "(" << (short)board[0] << ")";
     for (int i = 1; i < 10; ++i)
         cout << (short)board[i];
-    cout << endl;
 }
 
 unique_ptr<vector<string>> BSM::get_transforms(string const& board)
