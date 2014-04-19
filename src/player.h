@@ -9,18 +9,21 @@ class Board;
 class Player
 {
 public:
-    Player (unsigned char id);
+    Player (short id);
     virtual ~Player ();
 
-    virtual unsigned char get_id() const;
+    virtual short get_id() const;
 
-    virtual unsigned char get_move(std::shared_ptr<Board> board) const = 0;
+    virtual short get_move(std::shared_ptr<Board> board) const = 0;
 
-    static std::unique_ptr<std::vector<unsigned char>> get_possible_moves(
+    static std::unique_ptr<std::vector<short>> get_possible_moves(
             std::shared_ptr<Board> board);
 
+    static std::unique_ptr<std::vector<short>> get_possible_moves(
+            std::string const& board);
+
 protected:
-    unsigned char id;
+    short id;
 };
 
 

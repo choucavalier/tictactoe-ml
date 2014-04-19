@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-typedef std::tuple<char, char, char> Line;
+typedef std::tuple<short, short, short> Line;
 
 class Board
 {
@@ -14,30 +14,33 @@ public:
     
     void print() const;
 
-    void update(unsigned char move, unsigned char player_id);
-    void undo(unsigned char move);
+    static void print(std::string const& board_map);
 
-    unsigned char get_winner_id() const;
+    void update(short move, short player_id);
+    void undo(short move);
 
-    std::unique_ptr<std::vector<unsigned char>> get_features(
-            unsigned char player_id);
-
-    std::vector<unsigned char> const* get_cells() const;
+    short get_winner_id() const;
+    static short get_winner_id(std::string const& board);
 
     bool is_over();
 
-    void set_cell(int const& index, char const& value);
+    static bool is_over(std::string const& board);
 
-    void swap(int const& i, int const& j);
+    void set_cell(int const& index, short const& value);
 
-    std::shared_ptr<Board> copy();
+    short operator[](int index);
 
-    std::string in_string();
+    void swap(int i, int j);
+
+    std::string const& get_map();
+
+    short level();
 
 private:
-    std::unique_ptr<std::vector<unsigned char>> cells;
+    std::string map;
     static const std::vector<Line> END_LINES;
     Line get_line(const Line& end_line) const;
+    static Line get_line(const Line& end_line, const std::string& board);
 };
 
 #endif

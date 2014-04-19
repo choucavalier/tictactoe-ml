@@ -7,7 +7,7 @@
 
 using namespace std;
 
-MinMax::MinMax(unsigned char id) : Player(id),
+MinMax::MinMax(short id) : Player(id),
     oid(id == 1 ? 2 : 1)
 {
 }
@@ -16,9 +16,9 @@ MinMax::~MinMax()
 {
 }
 
-unsigned char MinMax::get_move(shared_ptr<Board> board) const
+short MinMax::get_move(shared_ptr<Board> board) const
 {
-    unsigned char move;
+    short move;
     int score;
     tie(move, score) = this->max(board);
     return move;
@@ -27,7 +27,7 @@ unsigned char MinMax::get_move(shared_ptr<Board> board) const
 
 int MinMax::evaluate(shared_ptr<Board> board) const
 {
-    unsigned char winner_id = board->get_winner_id();
+    short winner_id = board->get_winner_id();
     if (winner_id == 4)
         return 0;
     if (winner_id == this->id)
@@ -35,13 +35,13 @@ int MinMax::evaluate(shared_ptr<Board> board) const
     return -1;
 }
 
-pair<unsigned char, int> MinMax::max(shared_ptr<Board> board) const
+pair<short, int> MinMax::max(shared_ptr<Board> board) const
 {
     int best_score = -1000;
-    auto best_moves = vector<unsigned char> {};
+    auto best_moves = vector<short> {};
     auto moves = this->get_possible_moves(board);
     int score;
-    unsigned char mtrash;
+    short mtrash;
     for (auto& e : *moves)
     {
         board->update(e, this->id);
@@ -66,13 +66,13 @@ pair<unsigned char, int> MinMax::max(shared_ptr<Board> board) const
     return make_pair(best_moves[0], best_score);
 }
 
-pair<unsigned char, int> MinMax::min(shared_ptr<Board> board) const
+pair<short, int> MinMax::min(shared_ptr<Board> board) const
 {
     int worst_score = 1000;
-    auto worst_moves = vector<unsigned char> {};
+    auto worst_moves = vector<short> {};
     auto moves = this->get_possible_moves(board);
     int score;
-    unsigned char mtrash;
+    short mtrash;
     for (auto& e : *moves)
     {
         board->update(e, this->oid);

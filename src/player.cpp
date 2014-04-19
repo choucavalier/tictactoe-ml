@@ -6,7 +6,7 @@
 
 using namespace std;
 
-Player::Player(unsigned char id) : id(id)
+Player::Player(short id) : id(id)
 {
 }
 
@@ -14,19 +14,24 @@ Player::~Player()
 {
 }
 
-unsigned char Player::get_id() const
+short Player::get_id() const
 {
     return this->id;
 }
 
-unique_ptr<vector<unsigned char>> Player::get_possible_moves(
-        std::shared_ptr<Board> board)
+unique_ptr<vector<short>> Player::get_possible_moves(string const& board)
 {
-    auto moves = make_unique<vector<unsigned char>>();
+    auto moves = make_unique<vector<short>>();
 
-    for (unsigned char i = 0; i < 9; ++i)
-        if (board->get_cells()->at(i) == 0)
+    for (short i = 1; i < 10; ++i)
+        if (board[i] == 0)
             moves->push_back(i);
     return moves;
+}
+
+unique_ptr<vector<short>> Player::get_possible_moves(
+        std::shared_ptr<Board> board)
+{
+    return Player::get_possible_moves(board->get_map());
 }
 

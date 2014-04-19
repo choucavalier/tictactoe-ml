@@ -9,10 +9,10 @@
 class RandomPlayer : public Player
 {
 public:
-    RandomPlayer (unsigned char id);
+    RandomPlayer (short id);
     virtual ~RandomPlayer ();
 
-    unsigned char get_move(std::shared_ptr<Board> board) const;
+    short get_move(std::shared_ptr<Board> board) const;
 
 private:
     /* data */

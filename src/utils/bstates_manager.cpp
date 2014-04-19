@@ -1,146 +1,120 @@
 #include <memory>
 #include <vector>
+#include <string>
+#include <utility>
 #include <iostream>
 #include <fstream>
 
 #include "utils/make_unique.h"
 #include "bstates_manager.h"
 #include "player.h"
+#include "board.h"
 
 using namespace std;
 
-map<int, shared_ptr<vector<shared_ptr<Board>>>> BSM::cache = {};
+map<string, vector<string>> BSM::states = {};
 
-unique_ptr<vector<unique_ptr<Board>>> BSM::load(const string& path)
+void BSM::load(const string& path)
 {
-    auto loaded = make_unique<vector<unique_ptr<Board>>>();
-    return loaded;
+    BSM::states.clear();
+    ifstream file;
+    file.open(path);
+    string line;
+    while (getline(file, line))
+    {
+        if (line.length() < 10)
+            continue;
+        string board = line.substr(0, 10);
+        BSM::states[board] = {};
+    }
+    for (auto& b : BSM::states)
+        for (auto& s : BSM::states)
+            if (BSM::is_successor(s.first, b.first))
+                b.second.push_back(s.first);
+    file.close();
 }
 
-void BSM::save(Boards boards, const string& path)
+void BSM::save(const string& path)
 {
     ofstream file;
     file.open(path);
-    for (auto& board : *boards)
-        file << board->in_string() << "\n";
+    for (auto& board : BSM::states)
+    {
+        for (auto& c : board.first)
+            file << (short)c;
+        file << "\n";
+    }
     file.close();
 }
 
 void BSM::generate(const string& path)
 {
-    auto boards = make_shared<vector<shared_ptr<Board>>>();
-    auto board = make_shared<Board>();
+    BSM::states.clear();
 
-    auto copy = board->copy();
+    string board;
+    for (int i = 0; i < 10; ++i)
+        board.push_back(0);
 
-    BSM::cache[BSM::hash(board)] = make_shared<vector<shared_ptr<Board>>>();
-    BSM::cache[BSM::hash(board)]->push_back(copy);
+    BSM::states[board] = {};
 
-    boards->push_back(copy);
+    BSM::genrec(board, 0);
 
-    BSM::genrec(board, boards, 0);
+    cout << BSM::states.size() << " board states generated" << endl;
 
-    cout << boards->size() << " board states generated" << endl;
-
-    BSM::save(boards, path);
-
-    BSM::cache.clear();
+    BSM::save(path);
 }
 
-void BSM::genrec(shared_ptr<Board> board, Boards boards, char p)
+void BSM::genrec(string& board, char p)
 {
+    if (BSM::states.size() >= 765)
+        return;
     auto moves = Player::get_possible_moves(board);
     for (auto& e : *moves)
     {
-        board->update(e, p + 1);
+        board[e] = p + 1;
+        board[0]++;
 
-        auto base_case = BSM::get_base_case(board);
+        string base_case = BSM::get_base_case(board);
 
-        if (!BSM::is_generated(base_case))
-        {
-            boards->push_back(base_case);
-            int hash = BSM::hash(base_case);
-            if (BSM::cache[hash] == nullptr)
-                BSM::cache[hash] = make_shared<vector<shared_ptr<Board>>>();
-            BSM::cache[hash]->push_back(base_case);
-        }
+        if (!BSM::states.count(base_case))
+            BSM::states[base_case] = {};
 
-        if (boards->size() <= 765 && !board->is_over())
-            genrec(board, boards, !p);
+        if (!Board::is_over(board))
+            genrec(board, !p);
 
-        board->undo(e);
+        board[0]--;
+        board[e] = 0;
     }
 }
 
-bool BSM::is_generated(shared_ptr<Board> board)
+void BSM::rotate(string& board)
 {
-    int hash = BSM::hash(board);
-    if (BSM::cache[hash] == nullptr)
-        return false;
-    for (auto& e : *BSM::cache[hash])
-        if (BSM::eq(board, e))
-            return true;
-    return false;
+    string tmp(board);
+    for (int i = 1; i < 10; ++i)
+        board[i] = tmp[i * 7 % 10];
 }
 
-bool BSM::eq(shared_ptr<Board> b1, shared_ptr<Board> b2)
+void BSM::sym(string& board)
 {
-    if (*b1->get_cells() != *b2->get_cells())
-        return false;
-
-    return true;
+    for (int i = 1; i < 4; ++i)
+        swap(board[i], board[i + 6]);
 }
 
-void BSM::rotate(shared_ptr<Board> board)
+string BSM::get_base_case(string const& board)
 {
-    auto tmp = board->copy();
-    for (int i = 0; i < 9; ++i)
-        board->set_cell(i, tmp->get_cells()->at(((i + 1) * 7 % 10) - 1));
-}
-
-void BSM::sym(shared_ptr<Board> board)
-{
-    for (int i = 0; i < 3; ++i)
-        board->swap(i, i + 6);
-}
-
-int BSM::hash(shared_ptr<Board> board)
-{
-    int count = 0;
-    for (int i = 0; i < 9; ++i)
-        count += board->get_cells()->at(i);
-    return count;
-}
-
-shared_ptr<Board> BSM::get_base_case(shared_ptr<Board> board)
-{
-    auto transforms = make_shared<vector<shared_ptr<Board>>>();
-    auto tmp = board->copy();
-    for (int i = 0; i < 3; ++i)
-    {
-        BSM::rotate(tmp);
-        transforms->push_back(tmp->copy());
-    }
-    BSM::rotate(tmp);
-    BSM::sym(tmp);
-    transforms->push_back(tmp->copy());
-    for (int i = 0; i < 3; ++i)
-    {
-        BSM::rotate(tmp);
-        transforms->push_back(tmp->copy());
-    }
-    auto base_case = board->copy();
+    string base_case(board);
     int m1 = BSM::metric1(base_case);
     int m2 = BSM::metric2(base_case);
     int m3 = BSM::metric3(base_case);
     int m4 = BSM::metric4(base_case);
 
+    auto transforms = BSM::get_transforms(board);
     for (auto& e : *transforms)
     {
         int em1 = BSM::metric1(e);
         if (em1 < m1)
         {
-            base_case = e->copy();
+            base_case = e;
             m1 = em1;
             m2 = BSM::metric2(e);
             m3 = BSM::metric3(e);
@@ -151,7 +125,7 @@ shared_ptr<Board> BSM::get_base_case(shared_ptr<Board> board)
             int em2 = BSM::metric2(e);
             if (em2 < m2)
             {
-                base_case = e->copy();
+                base_case = e;
                 m2 = em2;
                 m3 = BSM::metric3(e);
                 m4 = BSM::metric4(e);
@@ -161,7 +135,7 @@ shared_ptr<Board> BSM::get_base_case(shared_ptr<Board> board)
                 int em3 = BSM::metric3(e);
                 if (em3 < m3)
                 {
-                    base_case = e->copy();
+                    base_case = e;
                     m3 = em3;
                     m4 = BSM::metric4(e);
                 }
@@ -170,7 +144,7 @@ shared_ptr<Board> BSM::get_base_case(shared_ptr<Board> board)
                     int em4 = BSM::metric4(e);
                     if (em4 < m4)
                     {
-                        base_case = e->copy();
+                        base_case = e;
                         m4 = em4;
                     }
                 }
@@ -180,39 +154,97 @@ shared_ptr<Board> BSM::get_base_case(shared_ptr<Board> board)
     return base_case;
 }
 
-int BSM::metric1(shared_ptr<Board> board)
+int BSM::metric1(string const& board)
 {
-    int count = 0;
-    for (int i = 0; i < 9; ++i)
-        if (board->get_cells()->at(i) == 1)
-            count += (i + 1);
+    unsigned int count = 0;
+    for (int i = 1; i < 10; ++i)
+        if (board[i] == 1)
+            count += i;
     return count;
 }
 
-int BSM::metric2(shared_ptr<Board> board)
+int BSM::metric2(string const& board)
 {
-    int count = 0;
-    for (int i = 0; i < 9; ++i)
-        if (board->get_cells()->at(i) == 2)
-            count += (i + 1);
+    unsigned int count = 0;
+    for (int i = 1; i < 10; ++i)
+        if (board[i] == 2)
+            count += i;
     return count;
 }
 
-int BSM::metric3(shared_ptr<Board> board)
+int BSM::metric3(string const& board)
 {
-    int count = 1;
-    for (int i = 0; i < 9; ++i)
-        if (board->get_cells()->at(i) == 1)
-            count *= (i + 1);
+    unsigned int count = 1;
+    for (int i = 1; i < 10; ++i)
+        if (board[i] == 1)
+            count *= i;
     return count;
 }
 
-int BSM::metric4(shared_ptr<Board> board)
+int BSM::metric4(string const& board)
 {
-    int count = 1;
-    for (int i = 0; i < 9; ++i)
-        if (board->get_cells()->at(i) == 2)
-            count *= (i + 1);
+    unsigned int count = 1;
+    for (int i = 1; i < 10; ++i)
+        if (board[i] == 2)
+            count *= i;
     return count;
 }
 
+bool BSM::is_successor(std::string s, string f)
+{
+    if (s[0] != (f[0] + 1))
+        return false;
+    auto transforms = BSM::get_transforms(s);
+    for (auto& t : *transforms)
+    {
+        short cell = 0;
+        bool found = 0;
+        for (short i = 1; i < 10; ++i)
+            if (found)
+                break;
+            else if (t[i] != f[i])
+            {
+                found = 1;
+                cell = i;
+            }
+        if (found && t[cell] != 0 && f[cell])
+            return true;
+    }
+    return false;
+}
+
+void BSM::print(std::string const& board)
+{
+    cout << "(" << (short)board[0] << ")";
+    for (int i = 1; i < 10; ++i)
+        cout << (short)board[i];
+    cout << endl;
+}
+
+unique_ptr<vector<string>> BSM::get_transforms(string const& board)
+{
+    auto transforms = make_unique<vector<string>>();
+    string tmp(board);
+    for (int i = 0; i < 3; ++i)
+    {
+        BSM::rotate(tmp);
+        transforms->push_back(tmp);
+    }
+    BSM::rotate(tmp);
+    BSM::sym(tmp);
+    transforms->push_back(tmp);
+    for (int i = 0; i < 3; ++i)
+    {
+        BSM::rotate(tmp);
+        transforms->push_back(tmp);
+    }
+    return transforms;
+}
+
+string BSM::board(string const& base)
+{
+    string board;
+    for (int i = 0; i < 10; ++i)
+        board.push_back(base[i] - '0');
+    return board;
+}

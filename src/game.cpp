@@ -26,7 +26,7 @@ bool Game::is_over() const
     return (this->winner_id != 0);
 }
 
-unsigned char Game::get_winner_id() const
+short Game::get_winner_id() const
 {
     return this->winner_id;
 }
@@ -58,7 +58,7 @@ string Game::get_state() const
 }
 
 
-void Game::run(unsigned char verbose)
+void Game::run(short verbose)
 {
     shared_ptr<Player> current;
     if (this->p1->get_id() == 1)
@@ -68,7 +68,7 @@ void Game::run(unsigned char verbose)
 
     while (!this->is_over())
     {
-        unsigned char move = current->get_move(this->get_board());
+        short move = current->get_move(this->get_board());
 
         this->board->update(move, current->get_id());
         this->update_winner_id();

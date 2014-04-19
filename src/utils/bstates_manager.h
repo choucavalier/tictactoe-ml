@@ -5,47 +5,44 @@
 #include <string>
 #include <vector>
 #include <map>
-
-#include "board.h"
-
-typedef std::shared_ptr<std::vector<std::shared_ptr<Board>>> Boards;
+#include <utility>
 
 class BoardStateManager
 {
 public:
-    static void generate(const std::string& path);
+    static std::map<std::string, std::vector<std::string>> states;
 
-    static std::unique_ptr<std::vector<std::unique_ptr<Board>>> load(
-            const std::string& path);
+    static void generate(std::string const& path);
 
-    static std::shared_ptr<Board> get_base_case(std::shared_ptr<Board> board);
-    static void rotate(std::shared_ptr<Board> board);
-    static void sym(std::shared_ptr<Board> board);
+    static void load(std::string const& path);
+
+    static std::string get_base_case(std::string const& board);
+
+    static void print(std::string const& board);
     
+    static void rotate(std::string& board);
+    static void sym(std::string& board);
+
+    static std::string board(std::string const& base);
+
 private:
-    static void genrec(std::shared_ptr<Board> board, Boards boards, char p);
+    static void genrec(std::string& board, char p);
 
-    static bool eq(std::shared_ptr<Board> b1, std::shared_ptr<Board> b2);
+    static std::unique_ptr<std::vector<std::string>> get_transforms(
+            std::string const& board);
+
+    static void save(std::string const& path);
 
 
-    static void save(Boards boards, const std::string& path);
-    
-    static bool is_generated(std::shared_ptr<Board> board);
-    //static bool is_transform(std::shared_ptr<Board> board,
-            //std::shared_ptr<Board> comp);
+    static int metric1(std::string const& board);
+    static int metric2(std::string const& board);
+    static int metric3(std::string const& board);
+    static int metric4(std::string const& board);
 
-    static int hash(std::shared_ptr<Board> board);
-    
-    static std::map<int, std::shared_ptr<std::vector<std::shared_ptr<Board>>>>
-        cache;
-
-    static int metric1(std::shared_ptr<Board> board);
-    static int metric2(std::shared_ptr<Board> board);
-    static int metric3(std::shared_ptr<Board> board);
-    static int metric4(std::shared_ptr<Board> board);
-
+    static bool is_successor(std::string s, std::string f);
 };
 
 typedef BoardStateManager BSM;
 
 #endif
+

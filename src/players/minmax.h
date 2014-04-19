@@ -10,15 +10,15 @@
 class MinMax : public Player
 {
 public:
-    MinMax (unsigned char id);
+    MinMax (short id);
     virtual ~MinMax ();
 
-    unsigned char get_move(std::shared_ptr<Board> board) const;
+    short get_move(std::shared_ptr<Board> board) const;
 
 private:
-    unsigned char oid;
-    std::pair<unsigned char, int> min(std::shared_ptr<Board> board) const;
-    std::pair<unsigned char, int> max(std::shared_ptr<Board> board) const;
+    short oid;
+    std::pair<short, int> min(std::shared_ptr<Board> board) const;
+    std::pair<short, int> max(std::shared_ptr<Board> board) const;
     int evaluate(std::shared_ptr<Board> board) const;
 };
 

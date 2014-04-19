@@ -9,23 +9,23 @@ using namespace std;
 
 const vector<Line> Board::END_LINES = {
     // rows
-    make_tuple(0, 1, 2),
-    make_tuple(3, 4, 5),
-    make_tuple(6, 7, 8),
+    make_tuple(1, 2, 3),
+    make_tuple(4, 5, 6),
+    make_tuple(7, 8, 9),
     // columns
-    make_tuple(0, 3, 6),
     make_tuple(1, 4, 7),
     make_tuple(2, 5, 8),
+    make_tuple(3, 6, 9),
     // diagonals
-    make_tuple(0, 4, 8),
-    make_tuple(2, 4, 6)
+    make_tuple(1, 5, 9),
+    make_tuple(3, 5, 7)
 };
 
 
-Board::Board() : cells(make_unique<vector<unsigned char>>(9))
+Board::Board() : map("")
 {
-    for (int i = 0; i < 9; ++i)
-        this->cells->at(i) = 0;
+    for (int i = 0; i < 10; ++i)
+        map[i] = 0;
 }
 
 Board::~Board()
@@ -35,21 +35,31 @@ Board::~Board()
 
 Line Board::get_line(const Line& end_line) const
 {
+    return Board::get_line(end_line, this->map);
+}
+
+Line Board::get_line(const Line& end_line, string const& board)
+{
     return make_tuple(
-            this->cells->at(get<0>(end_line)),
-            this->cells->at(get<1>(end_line)),
-            this->cells->at(get<2>(end_line))
+            board[(get<0>(end_line))],
+            board[(get<1>(end_line))],
+            board[(get<2>(end_line))]
     );
 }
 
+short Board::get_winner_id() const
+{
+    return this->get_winner_id(this->map);
+}
 
-unsigned char Board::get_winner_id() const
+
+short Board::get_winner_id(string const& board)
 {
     bool finished = true;
-    for (auto& end : this->END_LINES)
+    for (auto& end : Board::END_LINES)
     {
-        unsigned char a, b, c;
-        tie(a, b, c) = this->get_line(end);
+        short a, b, c;
+        tie(a, b, c) = Board::get_line(end, board);
         if (a == 1 && b == 1 && c == 1)
             return 1;
         if (a == 2 && b == 2 && c == 2)
@@ -63,79 +73,38 @@ unsigned char Board::get_winner_id() const
 }
 
 
-void Board::undo(unsigned char move)
+void Board::undo(short move)
 {
-    if (this->cells->at(move) == 0)
+    if (this->map[move] == 0)
     {
         this->print();
         cerr << "Trying to undo a move at empty cell " << (int)move << endl;
         throw 2;
     }
-    this->cells->at(move) = 0;
+    this->map[move] = 0;
+    this->map[0]--;
 }
 
-std::vector<unsigned char> const* Board::get_cells() const
+void Board::update(short move, short player_id)
 {
-    return this->cells.get();
-}
-
-void Board::update(unsigned char move, unsigned char player_id)
-{
-    if (this->cells->at(move) != 0)
+    if (this->map[move] != 0)
     {
         cerr << "Cell not empty at " << move << endl;
         throw 1;
     }
 
-    this->cells->at(move) = player_id;
+    this->map[move] = player_id;
+    this->map[0]++;
 }
 
-std::unique_ptr<std::vector<unsigned char>> Board::get_features(
-        unsigned char player_id)
+short Board::level()
 {
-    unsigned char oid = player_id == 1 ? 2 : 1;
-    auto features = make_unique<vector<unsigned char>>(6);
-    for (auto& end : this->END_LINES)
-    {
-        auto line = this->get_line(end);
-        unsigned char n[3] = {0, 0, 0};
-        n[(int)get<0>(line)]++;
-        n[(int)get<1>(line)]++;
-        n[(int)get<2>(line)]++;
-        features->at(0) += n[player_id] == 3;
-        features->at(1) += n[oid] == 3;
-        features->at(2) += n[player_id] == 1 && n[0] == 2;
-        features->at(3) += n[player_id] == 2 && n[0] == 1;
-        features->at(4) += n[oid] == 1 && n[0] == 2;
-        features->at(5) += n[oid] == 2 && n[0] == 1;
-    }
-    return features;
+    return this->map[0];
 }
-
 
 void Board::print() const
 {
-    for (int i = 0; i < 9; i += 3)
-    {
-        for (int j = 0; j < 3; ++j)
-        {
-            cout << " ";
-            string s;
-            if (this->cells->at(i + j) == 0)
-                s = to_string(i + j + 1);
-            else
-            {
-                if (this->cells->at(i + j) == 1)
-                    s = "X";
-                else
-                    s = "O";
-            }
-            cout << s;
-            cout << " ";
-        }
-        cout << endl;
-    }
-    cout << endl;
+    this->print(this->map);
 }
 
 bool Board::is_over()
@@ -143,32 +112,37 @@ bool Board::is_over()
     return (this->get_winner_id() != 0);
 }
 
-
-void Board::set_cell(int const& index, char const& value)
+bool Board::is_over(string const& board)
 {
-    this->cells->at(index) = value;
+    return (Board::get_winner_id(board) != 0);
 }
 
-void Board::swap(int const& i, int const& j)
+short Board::operator[](int index)
 {
-    char tmp = this->cells->at(i);
-    this->cells->at(i) = this->cells->at(j);
-    this->cells->at(j) = tmp;
+    return this->map[index];
 }
 
-shared_ptr<Board> Board::copy()
+void Board::swap(int i, int j)
 {
-    auto board = make_shared<Board>();
-    for (unsigned int i = 0; i < this->cells->size(); ++i)
-        board->set_cell(i, this->cells->at(i));
-    return board;
+    std::swap(this->map[i], this->map[j]);
 }
 
-string Board::in_string()
+string const& Board::get_map()
 {
-    string s = "";
-    for (auto& e : *this->cells)
-        s = s + to_string((int)e);
-    return s;
+    return this->map;
 }
 
+void Board::print(string const& bmap)
+{
+    for (short i = 1; i < 10; ++i)
+    {
+        cout << " ";
+        if (!bmap[i])
+            cout << i;
+        else
+            cout << ((bmap[i] == 1) ? "X" : "O");
+        if (i % 3 == 0)
+            cout << endl;
+    }
+    cout << endl;
+}

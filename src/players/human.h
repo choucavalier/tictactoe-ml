@@ -7,10 +7,10 @@
 class Human : public Player
 {
 public:
-    Human (unsigned char id);
+    Human (short id);
     virtual ~Human ();
 
-    unsigned char get_move(std::shared_ptr<Board> board) const;
+    short get_move(std::shared_ptr<Board> board) const;
 };
 
 #endif

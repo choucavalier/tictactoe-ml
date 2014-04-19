@@ -15,7 +15,7 @@ public:
     Game (std::unique_ptr<Player> p1, std::unique_ptr<Player> p2);
     virtual ~Game ();
 
-    void run(unsigned char verbose = 0);
+    void run(short verbose = 0);
 
     bool is_over() const;
 
@@ -23,10 +23,10 @@ public:
 
     std::shared_ptr<Board> get_board() const;
     
-    unsigned char get_winner_id() const;
+    short get_winner_id() const;
 
 private:
-    unsigned char winner_id;
+    short winner_id;
     void update_winner_id();
     std::shared_ptr<Board> board;
     std::shared_ptr<Player> p1;

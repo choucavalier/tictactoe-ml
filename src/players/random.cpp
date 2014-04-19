@@ -4,7 +4,7 @@
 
 using namespace std;
 
-RandomPlayer::RandomPlayer(unsigned char id) : Player(id)
+RandomPlayer::RandomPlayer(short id) : Player(id)
 {
 }
 
@@ -13,7 +13,7 @@ RandomPlayer::~RandomPlayer()
 }
 
 
-unsigned char RandomPlayer::get_move(shared_ptr<Board> board) const
+short RandomPlayer::get_move(shared_ptr<Board> board) const
 {
     auto moves = this->get_possible_moves(board);
     random_shuffle(moves->begin(), moves->end());
