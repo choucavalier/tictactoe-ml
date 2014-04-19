@@ -28,11 +28,11 @@ short MinMax::get_move(shared_ptr<Board> board) const
 int MinMax::evaluate(shared_ptr<Board> board) const
 {
     short winner_id = board->get_winner_id();
-    if (winner_id == 4)
-        return 0;
+    if (winner_id == this->oid)
+        return -1;
     if (winner_id == this->id)
         return 1;
-    return -1;
+    return 0;
 }
 
 pair<short, int> MinMax::max(shared_ptr<Board> board) const

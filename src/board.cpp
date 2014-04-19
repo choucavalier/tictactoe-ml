@@ -4,6 +4,7 @@
 
 #include "utils/make_unique.h"
 #include "board.h"
+#include "utils/bsm.h"
 
 using namespace std;
 
@@ -26,6 +27,10 @@ Board::Board()
 {
     for (int i = 0; i < 10; ++i)
         this->map.push_back(0);
+}
+
+Board::Board(string const& board) : map(BSM::board(board))
+{
 }
 
 Board::~Board()
@@ -55,19 +60,25 @@ short Board::get_winner_id() const
 
 short Board::get_winner_id(string const& board)
 {
-    bool finished = true;
+    bool can_continue = false;
     for (auto& end : Board::END_LINES)
     {
         short a, b, c;
         tie(a, b, c) = Board::get_line(end, board);
+        short count[3] = { 0, 0, 0 };
+        count[a]++;
+        count[b]++;
+        count[c]++;
+        if (!can_continue && (count[0] == 3
+                || (count[0] == 2 && (count[1] == 1 || count[2] == 1))
+                || (count[0] == 1 && (count[1] == 2 || count[2] == 2))))
+            can_continue = true;
         if (a == 1 && b == 1 && c == 1)
             return 1;
         if (a == 2 && b == 2 && c == 2)
             return 2;
-        if (a == 0 || b == 0 || c == 0)
-            finished = false;
     }
-    if (finished)
+    if (!can_continue)
         return 3;
     return 0;
 }

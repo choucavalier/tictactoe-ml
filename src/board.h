@@ -10,6 +10,7 @@ class Board
 {
 public:
     Board ();
+    Board (std::string const& board);
     virtual ~Board ();
     
     void print() const;

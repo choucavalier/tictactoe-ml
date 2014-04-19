@@ -6,7 +6,7 @@
 
 #include "player.h"
 
-typedef std::map<std::string, std::string> Strategy;
+typedef std::map<std::string, std::pair<short, std::string>> Strategy;
 
 class Individual : public Player
 {
@@ -19,6 +19,8 @@ public:
     float get_fitness() const;
 
     void mutate();
+
+    void initialize();
 
     std::string operator[](std::string const& board);
 
