@@ -31,7 +31,7 @@ Genetic::~Genetic()
 void Genetic::run()
 {
     int generations = 0;
-    while (generations < 200 && this->max_fitness < 99.5)
+    while (generations < 200 && this->max_fitness < 140)
     {
         this->next_gen();
         HistoryEntry entry;
@@ -53,10 +53,10 @@ void Genetic::next_gen()
 {
     this->min_fitness = 10000;
     this->max_fitness = 0;
-    auto counts = map<shared_ptr<Individual>, int>();
+    auto counts = map<shared_ptr<Individual>, tuple<int, int, int>>();
     for (auto p1 : *this->population)
     {
-        int losses = 0;
+        int losses = 0, won = 0, draw = 0;
         for (auto p2 : *this->population)
         {
             if (&(*p1) == &(*p2))
@@ -69,19 +69,32 @@ void Genetic::next_gen()
             g.run();
             if (g.get_winner_id() == oid)
                 losses++;
+            else if (g.get_winner_id() == pid)
+                won++;
+            else
+                draw++;
         }
-        counts[p1] = losses;
+        counts[p1] = tuple<int, int, int>(draw, won, losses);
     }
-    auto countscount = map<int, int>();
+    auto countdraw = map<int, int>();
+    auto countlost = map<int, int>();
+    auto countwin = map<int, int>();
 
     for (auto& e : counts)
-        countscount[e.second]++;
+    {
+        countdraw[get<0>(e.second)]++;
+        countlost[get<1>(e.second)]++;
+        countwin[get<2>(e.second)]++;
+    }
 
     this->sum_fitness = 0;
     for (auto& e : counts)
     {
-        double fitness = 100 * (1 / (double)countscount[e.second]) *
-            (1 - ((double)e.second / (double)(Genetic::P - 1)));
+        //double fitness = 100 * (1 / (double)countscount[e.second.second]) *
+            //(1 - ((double)e.second.second / (double)(Genetic::P - 1)));
+        double fitness = 100 * (double)(get<2>(e.second) + get<0>(e.second))
+            / (double)(Genetic::P - 1);
+        fitness -= 100 * (double)get<1>(e.second) / (double)(Genetic::P - 1);
         this->sum_fitness += fitness;
         e.first->set_fitness(fitness);
         if (fitness > this->max_fitness)
@@ -158,6 +171,13 @@ void Genetic::save()
     char buffer[80];
     strftime(buffer, 80, "%Y-%m-%d-%H-%M-%S",timeinfo);
     string time = buffer;
+
+    for (auto& e : *this->population)
+        if (e->get_fitness() == this->max_fitness)
+        {
+            e->save("resources/individuals/" + time);
+            break;
+        }
     ofstream file;
     file.open("resources/histories/" + time);
     for (auto& e : *this->history)

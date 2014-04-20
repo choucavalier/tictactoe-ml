@@ -23,6 +23,9 @@ public:
 
     std::shared_ptr<Strategy> get_strategy() const;
 
+    void save(std::string const& path);
+    void load(std::string const& path);
+
 private:
     float fitness;
     std::shared_ptr<Strategy> strategy;

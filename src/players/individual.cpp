@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <utility>
 #include <iostream>
+#include <fstream>
 
 #include "utils/make_unique.h"
 #include "players/individual.h"
@@ -68,5 +69,36 @@ void Individual::mutate()
 shared_ptr<Strategy> Individual::get_strategy() const
 {
     return this->strategy;
+}
+
+void Individual::load(std::string const& path)
+{
+    this->strategy->clear();
+    
+    ifstream file;
+    file.open(path);
+
+    string line;
+    while (getline(file, line))
+    {
+        string next;
+        getline(file, next);
+        auto entry = pair<short, string>(next[10] - '0',
+                BSM::board(next.substr(0, 10)));
+        string bs = BSM::board(line.substr(0, 10));
+        this->strategy->insert(pair<string, pair<short, string>>(bs, entry));
+    }
+}
+
+
+void Individual::save(std::string const& path)
+{
+    ofstream file;
+    file.open(path);
+    for (auto& e : *this->strategy)
+    {
+        file << BSM::str(e.first) << endl;
+        file << BSM::str(e.second.second) << e.second.first << endl;
+    }
 }
 
