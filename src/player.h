@@ -14,6 +14,8 @@ public:
 
     virtual short get_id() const;
 
+    virtual void set_id(short id);
+
     virtual short get_move(std::shared_ptr<Board> board) const = 0;
 
     static std::unique_ptr<std::vector<short>> get_possible_moves(

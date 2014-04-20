@@ -100,6 +100,7 @@ void Board::update(short move, short player_id)
 {
     if (this->map[move] != 0)
     {
+        cout << BSM::str(this->map) << endl;
         cerr << "Cell not empty at " << move << endl;
         throw 1;
     }
@@ -149,7 +150,7 @@ void Board::print(string const& bmap)
     {
         cout << " ";
         if (!bmap[i])
-            cout << i;
+            cout << ".";
         else
             cout << ((bmap[i] == 1) ? "X" : "O");
         if (i % 3 == 0)

@@ -11,8 +11,8 @@
 
 using namespace std;
 
-Game::Game(unique_ptr<Player> p1, unique_ptr<Player> p2) : winner_id(0),
-    board(make_shared<Board>()), p1(move(p1)), p2(move(p2))
+Game::Game(shared_ptr<Player> p1, shared_ptr<Player> p2) : winner_id(0),
+    board(make_shared<Board>()), p1(p1), p2(p2)
 {
 }
 

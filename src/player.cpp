@@ -19,6 +19,11 @@ short Player::get_id() const
     return this->id;
 }
 
+void Player::set_id(short id)
+{
+    this->id = id;
+}
+
 unique_ptr<vector<short>> Player::get_possible_moves(string const& board)
 {
     auto moves = make_unique<vector<short>>();

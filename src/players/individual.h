@@ -17,15 +17,15 @@ public:
     short get_move(std::shared_ptr<Board> board) const;
 
     float get_fitness() const;
+    void set_fitness(float const& fitness);
 
     void mutate();
 
-    void initialize();
-
-    std::string operator[](std::string const& board);
+    std::shared_ptr<Strategy> get_strategy() const;
 
 private:
-    std::unique_ptr<Strategy> strategy;
+    float fitness;
+    std::shared_ptr<Strategy> strategy;
 };
 
 #endif

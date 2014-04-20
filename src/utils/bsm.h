@@ -25,28 +25,29 @@ public:
 
     static std::string board(std::string const& base);
 
+    static void print_strategy();
+
+    static void rotate(std::string& board);
+    static void sym(std::string& board);
+
+    static short get_move(std::string f, std::string t, short move);
+
+    static short whos_turn(std::string const& board);
+
 private:
-    static void genrec(std::string& board, char p, std::string const& lastbc);
+    static void genrec(std::string& board, char p, std::string lastbc);
 
     static std::unique_ptr<std::vector<std::string>> get_transforms(
             std::string const& board);
 
     static void save(std::string const& path);
 
-    static short diff(std::string const& b1, std::string const& b2);
+    static short diff1(std::string const& b1, std::string const& b2);
     
-    static void rotate(std::string& board);
-    static void sym(std::string& board);
-
     static int metric1(std::string const& board);
     static int metric2(std::string const& board);
     static int metric3(std::string const& board);
     static int metric4(std::string const& board);
-
-    static std::pair<bool, short> successor(std::string const& s,
-            std::string const& f);
-
-    static short get_move(std::string const& f, std::string t, short move);
 };
 
 typedef BoardStateManager BSM;

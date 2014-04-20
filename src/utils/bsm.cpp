@@ -4,6 +4,7 @@
 #include <utility>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 #include "utils/make_unique.h"
 #include "bsm.h"
@@ -29,8 +30,6 @@ void BSM::load(const string& path)
         {
             string board = BSM::board(line.substr(0, 10));
             BSM::states[board] = {};
-            if (!Board::is_over(board))
-                BSM::strategies[board] = {};
             last = board;
         }
         else
@@ -40,11 +39,12 @@ void BSM::load(const string& path)
                 short move = line[i - 1] - '0';
                 auto entry = pair<short, string>(move, s);
                 BSM::states[last].push_back(entry);
-                if (!Board::is_over(last))
-                    BSM::strategies[last].push_back(entry);
             }
         first = !first;
     }
+    for (auto& e : BSM::states)
+        if (!Board::is_over(e.first))
+            BSM::strategies[e.first] = e.second;
     file.close();
 }
 
@@ -72,29 +72,19 @@ void BSM::generate(const string& path)
 
     BSM::states[board] = {};
 
-    string lastbc = board;
+    BSM::genrec(board, 0, board);
 
-    BSM::genrec(board, 0, lastbc);
-
-    //for (auto& f : BSM::states)
-        //for (auto& s : BSM::states)
-        //{
-            //bool is_successor;
-            //short move;
-            //tie(is_successor, move) = BSM::successor(s.first, f.first);
-            //if (is_successor)
-                //f.second.push_back(pair<short, string>(move, s.first));
-        //}
+    for (auto& e : BSM::states)
+        if (!Board::is_over(e.first))
+            BSM::strategies[e.first] = e.second;
 
     cout << BSM::states.size() << " board states generated" << endl;
 
     BSM::save(path);
 }
 
-void BSM::genrec(string& board, char p, string const& lastbc)
+void BSM::genrec(string& board, char p, string lastbc)
 {
-    if (BSM::states.size() >= 765)
-        return;
     auto moves = Player::get_possible_moves(board);
     for (auto& e : *moves)
     {
@@ -104,9 +94,17 @@ void BSM::genrec(string& board, char p, string const& lastbc)
         string base_case = BSM::get_base_case(board);
 
         if (!BSM::states.count(base_case))
-        {
             BSM::states[base_case] = {};
-            BSM::states[lastbc].push_back(pair<short, string>(e, base_case));
+
+        if (find_if(BSM::states[lastbc].begin(), BSM::states[lastbc].end(),
+                [&base_case](const pair<short, string>& p)
+                { return p.second == base_case; }) == BSM::states[lastbc].end())
+        {
+            auto p = pair<short, string>(BSM::get_move(lastbc, board, e),
+                    base_case);
+            BSM::states[lastbc].push_back(p);
+            if (lastbc[p.first] != 0)
+                throw 1;
         }
 
         if (!Board::is_over(board))
@@ -248,22 +246,26 @@ unique_ptr<vector<string>> BSM::get_transforms(string const& board)
     return transforms;
 }
 
-pair<bool, short> BSM::successor(string const& s, string const& f)
+string BSM::board(string const& base)
 {
-    if (s[0] != (f[0] + 1))
-        return pair<bool, short>(false, 0);
-    auto transforms = BSM::get_transforms(s);
-    transforms->push_back(s);
-    for (auto& t : *transforms)
-    {
-        short move = BSM::diff(s, f);
-        if (move != 0)
-            return pair<bool, short>(true, BSM::get_move(s, t, move));
-    }
-    return pair<bool, short>(false, 0);
+    string board;
+    for (int i = 0; i < 10; ++i)
+        board.push_back(base[i] - '0');
+    return board;
 }
 
-short BSM::diff(string const& s, string const& f)
+void BSM::print_strategy()
+{
+    for (auto& e : BSM::strategies)
+    {
+        cout << BSM::str(e.first) << " : ";
+        for (auto& s : e.second)
+            cout << "<" << s.first << ", " << BSM::str(s.second) << "> ";
+        cout << endl;
+    }
+}
+
+short BSM::diff1(string const& s, string const& f)
 {
     short found = 0;
     short move = 0;
@@ -280,44 +282,31 @@ short BSM::diff(string const& s, string const& f)
     return 0;
 }
 
-short BSM::get_move(string const& s, string t, short move)
+short BSM::get_move(string bc, string b, short move)
 {
-    if (t == s)
+    move = BSM::diff1(b, bc);
+    if (move)
         return move;
-    string buf;
-    buf.push_back(0);
-    for (short i = 1; i < 10; ++i)
-        buf.push_back(i);
-    for (int i = 0; i < 3; ++i)
+    auto transforms = BSM::get_transforms(b);
+    for (const auto& transform : *transforms)
     {
-        if (t == s)
+        short move = BSM::diff1(transform, bc);
+        if (move)
             return move;
-        BSM::rotate(t);
-        BSM::rotate(buf);
-        move = buf[move];
     }
-    BSM::rotate(t);
-    BSM::rotate(buf);
-    move = buf[move];
-    BSM::sym(t);
-    BSM::sym(buf);
-    move = buf[move];
-    for (int i = 0; i < 3; ++i)
-    {
-        if (t == s)
-            return move;
-        BSM::rotate(t);
-        BSM::rotate(buf);
-        move = buf[move];
-    }
-    return move;
+    throw 1;
 }
 
-string BSM::board(string const& base)
+short BSM::whos_turn(string const& bc)
 {
-    string board;
-    for (int i = 0; i < 10; ++i)
-        board.push_back(base[i] - '0');
-    return board;
+    short countX = 0;
+    short countO = 0;
+    for (int i = 1; i < 10; ++i)
+        if (bc[i] == 1)
+            countX++;
+        else if (bc[i] == 2)
+            countO++;
+    if (countX > countO)
+        return 2;
+    return 1;
 }
-

@@ -12,7 +12,7 @@ class Player;
 class Game
 {
 public:
-    Game (std::unique_ptr<Player> p1, std::unique_ptr<Player> p2);
+    Game (std::shared_ptr<Player> p1, std::shared_ptr<Player> p2);
     virtual ~Game ();
 
     void run(short verbose = 0);
