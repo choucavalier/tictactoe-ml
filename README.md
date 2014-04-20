@@ -4,8 +4,10 @@ tictactoe-ml
 Program written in C++ that allows testing of ML techinques to learn how to play Tic-Tac-Toe
 
 
-Genetic Algorithm result
-=============
+## Genetic Algorithm result
+
+![Graph](resources/imgs/evolution.png)
+
     Generation #1: 4.59992, 71.8593(mean=15.4673) 200 individuals
     Generation #2: 6.14182, 73.3668(mean=16.7839) 200 individuals
     Generation #3: 6.28141, 75.3769(mean=16.7136) 200 individuals
