@@ -3,8 +3,17 @@
 
 #include <memory>
 #include <vector>
+#include <tuple>
 
 #include "players/individual.h"
+
+struct HistoryEntry
+{
+    int generation;
+    float min_fitness;
+    float max_fitness;
+    float mean_fitness;
+};
 
 class Genetic
 {
@@ -33,6 +42,10 @@ private:
 
     std::shared_ptr<Individual> cross_over(std::shared_ptr<Individual> mama,
             std::shared_ptr<Individual> papa);
+
+    std::unique_ptr<std::vector<HistoryEntry>> history;
+
+    void save();
 };
 
 #endif

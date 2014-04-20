@@ -1,5 +1,6 @@
 #include <memory>
 #include <iostream>
+#include <fstream>
 #include <algorithm>
 
 #include "utils/make_unique.h"
@@ -13,7 +14,8 @@ const double Genetic::R = 0.6;
 const double Genetic::M = 0.05;
 
 Genetic::Genetic() : population(make_unique<vector<shared_ptr<Individual>>>()),
-    max_fitness(0), min_fitness(10000)
+    max_fitness(0), min_fitness(10000),
+    history(make_unique<vector<HistoryEntry>>())
 {
     for (int i = 0; i < Genetic::P; ++i)
     {
@@ -29,15 +31,22 @@ Genetic::~Genetic()
 void Genetic::run()
 {
     int generations = 0;
-    while (generations < 200 || this->max_fitness < 99.5)
+    while (generations < 200 && this->max_fitness < 99.5)
     {
         this->next_gen();
+        HistoryEntry entry;
+        entry.max_fitness = this->max_fitness;
+        entry.min_fitness = this->min_fitness;
+        entry.mean_fitness = this->mean_fitness;
+        entry.generation = generations;
+        this->history->push_back(entry);
         generations++;
         cout << "Generation #" << generations << ": ";
         cout << this->min_fitness << ", " << this->max_fitness;
         cout << "(mean=" << this->mean_fitness << ")";
         cout << " " << this->population->size() << " individuals" << endl;
     }
+    this->save();
 }
 
 void Genetic::next_gen()
@@ -94,8 +103,9 @@ void Genetic::evolve()
 {
     random_shuffle(this->population->begin(), this->population->end());
     auto np = make_unique<vector<shared_ptr<Individual>>>();
+
+    // choose mumbers randomly, weighted by their fitness
     unsigned int to_select = (1 - Genetic::R) * Genetic::P;
-    cout << to_select << " randomly selected" << endl;
     while (np->size() < to_select)
         for (auto& individual : *this->population)
         {
@@ -106,6 +116,8 @@ void Genetic::evolve()
                 np->push_back(individual);
         }
     random_shuffle(this->population->begin(), this->population->end());
+
+    // choose random parents & generate children
     unsigned int to_crossover = Genetic::R * Genetic::P;
     auto parents1 = vector<shared_ptr<Individual>>();
     for (unsigned int i = 0; i < to_crossover; ++i)
@@ -116,10 +128,10 @@ void Genetic::evolve()
         parents2.push_back(this->population->at(i));
     for (unsigned int i = 0; i < to_crossover; ++i)
         np->push_back(cross_over(parents1[i], parents2[i]));
-    cout << to_crossover << " from cross over" << endl;
     random_shuffle(np->begin(), np->end());
+    
+    // mutate some members of the new population
     unsigned int to_mutate = Genetic::M * Genetic::P;
-    cout << to_mutate << " mutated" << endl;
     for (unsigned int i = 0; i < to_mutate; ++i)
         np->at(i)->mutate();
     this->population = move(np);
@@ -135,5 +147,26 @@ shared_ptr<Individual> Genetic::cross_over(shared_ptr<Individual> mama,
         else
             e.second = mama->get_strategy()->at(e.first);
     return baby;
+}
+
+void Genetic::save()
+{
+    time_t rawtime;
+    struct tm * timeinfo;
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    char buffer[80];
+    strftime(buffer, 80, "%Y-%m-%d-%H-%M-%S",timeinfo);
+    string time = buffer;
+    ofstream file;
+    file.open("resources/histories/" + time);
+    for (auto& e : *this->history)
+    {
+        file << e.generation << endl;
+        file << e.max_fitness << endl;
+        file << e.min_fitness << endl;
+        file << e.mean_fitness << endl;
+    }
+    file.close();
 }
 
