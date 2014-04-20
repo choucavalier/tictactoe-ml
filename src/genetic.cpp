@@ -12,7 +12,7 @@ using namespace std;
 
 const double Genetic::P = 200;
 const double Genetic::R = 0.6;
-const double Genetic::M = 0.20;
+const double Genetic::M = 0.08;
 
 Genetic::Genetic() : population(make_unique<vector<shared_ptr<Individual>>>()),
     max_fitness(0), min_fitness(10000),
@@ -60,32 +60,13 @@ void Genetic::next_gen()
     {
         int losses = 0, won = 0, draw = 0;
 
-        for (int i = 0; i < Genetic::P; ++i)
-        {
-            int pid = rand() % 2 + 1;
-            int oid = pid == 1 ? 2 : 1;
-            p1->set_id(pid);
-            this->teacher->set_id(oid);
-            Game g(p1, this->teacher);
-            g.run();
-            if (g.get_winner_id() == oid)
-                losses++;
-            else if (g.get_winner_id() == pid)
-                won++;
-            else
-                draw++;
-        }
-        //cout << "won: " << won << " lost: " << losses << endl;
-
-        //for (auto p2 : *this->population)
+        //for (int i = 0; i < Genetic::P; ++i)
         //{
-            //if (&(*p1) == &(*p2))
-                //continue;
             //int pid = rand() % 2 + 1;
             //int oid = pid == 1 ? 2 : 1;
             //p1->set_id(pid);
-            //p2->set_id(oid);
-            //Game g(p1, p2);
+            //this->teacher->set_id(oid);
+            //Game g(p1, this->teacher);
             //g.run();
             //if (g.get_winner_id() == oid)
                 //losses++;
@@ -94,6 +75,26 @@ void Genetic::next_gen()
             //else
                 //draw++;
         //}
+
+        //cout << "won: " << won << " lost: " << losses << endl;
+
+        for (auto p2 : *this->population)
+        {
+            if (&(*p1) == &(*p2))
+                continue;
+            int pid = rand() % 2 + 1;
+            int oid = pid == 1 ? 2 : 1;
+            p1->set_id(pid);
+            p2->set_id(oid);
+            Game g(p1, p2);
+            g.run();
+            if (g.get_winner_id() == oid)
+                losses++;
+            else if (g.get_winner_id() == pid)
+                won++;
+            else
+                draw++;
+        }
 
         counts[p1] = tuple<int, int, int>(draw, losses, won);
     }
@@ -111,11 +112,11 @@ void Genetic::next_gen()
     this->sum_fitness = 0;
     for (auto& e : counts)
     {
-        double fitness = 100 * (1 / (double)countlost[get<1>(e.second)]) *
-            (1 - ((double)get<1>(e.second) / (double)(Genetic::P - 1)));
-        //double fitness = 100 * (double)(get<2>(e.second) + get<0>(e.second))
-            /// (double)(Genetic::P - 1);
-        //fitness -= 100 * (double)get<1>(e.second) / (double)(Genetic::P - 1);
+        //double fitness = 100 * (1 / (double)countlost[get<1>(e.second)]) *
+            //(1 - ((double)get<1>(e.second) / (double)(Genetic::P - 1)));
+        double fitness = 100 * (double)(get<2>(e.second) + get<0>(e.second))
+            / (double)(Genetic::P - 1);
+        fitness -= 100 * (double)get<1>(e.second) / (double)(Genetic::P - 1);
         this->sum_fitness += fitness;
         e.first->set_fitness(fitness);
         if (fitness > this->max_fitness)
@@ -193,12 +194,12 @@ void Genetic::save()
     strftime(buffer, 80, "%Y-%m-%d-%H-%M-%S",timeinfo);
     string time = buffer;
 
+    shared_ptr<Individual> best;
     for (auto& e : *this->population)
-        if (e->get_fitness() == this->max_fitness)
-        {
-            e->save("resources/individuals/" + time);
-            break;
-        }
+        if (best == nullptr || e->get_fitness() > best->get_fitness())
+            best = e;
+    best->save("resources/individuals/" + time);
+    cout << "Individual saved in resources/individuals/" + time << endl;
     ofstream file;
     file.open("resources/histories/" + time);
     for (auto& e : *this->history)

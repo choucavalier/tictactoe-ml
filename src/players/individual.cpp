@@ -52,7 +52,7 @@ short Individual::get_move(shared_ptr<Board> board) const
 
 void Individual::mutate()
 {
-    int to_mutate = rand() % 50 + 3;
+    int to_mutate = rand() % 10 + 3;
     vector<string> bcs = {};
     for (auto& e : *this->strategy)
         if (BSM::strategies[e.first].size() > 1)
