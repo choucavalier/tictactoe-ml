@@ -6,6 +6,7 @@
 #include <tuple>
 
 #include "players/individual.h"
+#include "players/minmax.h"
 
 struct HistoryEntry
 {
@@ -46,6 +47,8 @@ private:
     std::unique_ptr<std::vector<HistoryEntry>> history;
 
     void save();
+
+    std::shared_ptr<MinMax> teacher;
 };
 
 #endif

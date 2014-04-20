@@ -12,11 +12,12 @@ using namespace std;
 
 const double Genetic::P = 200;
 const double Genetic::R = 0.6;
-const double Genetic::M = 0.05;
+const double Genetic::M = 0.20;
 
 Genetic::Genetic() : population(make_unique<vector<shared_ptr<Individual>>>()),
     max_fitness(0), min_fitness(10000),
-    history(make_unique<vector<HistoryEntry>>())
+    history(make_unique<vector<HistoryEntry>>()),
+    teacher(make_shared<MinMax>(1))
 {
     for (int i = 0; i < Genetic::P; ++i)
     {
@@ -32,7 +33,7 @@ Genetic::~Genetic()
 void Genetic::run()
 {
     int generations = 0;
-    while (generations < 200 && this->max_fitness < 140)
+    while (generations < 200 && this->max_fitness < 95)
     {
         this->next_gen();
         HistoryEntry entry;
@@ -53,21 +54,19 @@ void Genetic::run()
 void Genetic::next_gen()
 {
     this->min_fitness = 10000;
-    this->max_fitness = 0;
+    this->max_fitness = -10000;
     auto counts = map<shared_ptr<Individual>, tuple<int, int, int>>();
     for (auto p1 : *this->population)
     {
         int losses = 0, won = 0, draw = 0;
 
-        auto minmax = make_shared<MinMax>(1);
-
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < Genetic::P; ++i)
         {
             int pid = rand() % 2 + 1;
             int oid = pid == 1 ? 2 : 1;
             p1->set_id(pid);
-            minmax->set_id(oid);
-            Game g(p1, minmax);
+            this->teacher->set_id(oid);
+            Game g(p1, this->teacher);
             g.run();
             if (g.get_winner_id() == oid)
                 losses++;
@@ -76,6 +75,7 @@ void Genetic::next_gen()
             else
                 draw++;
         }
+        //cout << "won: " << won << " lost: " << losses << endl;
 
         //for (auto p2 : *this->population)
         //{
@@ -95,27 +95,27 @@ void Genetic::next_gen()
                 //draw++;
         //}
 
-        counts[p1] = tuple<int, int, int>(draw, won, losses);
+        counts[p1] = tuple<int, int, int>(draw, losses, won);
     }
-    //auto countdraw = map<int, int>();
-    //auto countlost = map<int, int>();
-    //auto countwin = map<int, int>();
+    auto countdraw = map<int, int>();
+    auto countlost = map<int, int>();
+    auto countwin = map<int, int>();
 
-    //for (auto& e : counts)
-    //{
-        //countdraw[get<0>(e.second)]++;
-        //countlost[get<1>(e.second)]++;
-        //countwin[get<2>(e.second)]++;
-    //}
+    for (auto& e : counts)
+    {
+        countdraw[get<0>(e.second)]++;
+        countlost[get<1>(e.second)]++;
+        countwin[get<2>(e.second)]++;
+    }
 
     this->sum_fitness = 0;
     for (auto& e : counts)
     {
-        //double fitness = 100 * (1 / (double)countscount[e.second.second]) *
-            //(1 - ((double)e.second.second / (double)(Genetic::P - 1)));
-        double fitness = 100 * (double)(get<2>(e.second) + get<0>(e.second))
-            / (double)(Genetic::P - 1);
-        fitness -= 100 * (double)get<1>(e.second) / (double)(Genetic::P - 1);
+        double fitness = 100 * (1 / (double)countlost[get<1>(e.second)]) *
+            (1 - ((double)get<1>(e.second) / (double)(Genetic::P - 1)));
+        //double fitness = 100 * (double)(get<2>(e.second) + get<0>(e.second))
+            /// (double)(Genetic::P - 1);
+        //fitness -= 100 * (double)get<1>(e.second) / (double)(Genetic::P - 1);
         this->sum_fitness += fitness;
         e.first->set_fitness(fitness);
         if (fitness > this->max_fitness)
