@@ -17,15 +17,18 @@ int main(int argc, char *argv[])
     srand(time(NULL));
     BSM::load("resources/states");
 
-    //Genetic genetic;
+    Genetic genetic;
 
-    //genetic.run();
+    genetic.run();
     
-    auto p1 = make_shared<Individual>(2);
-    p1->load("resources/individuals/2014-04-20-19-26-07");
-    auto p2 = make_shared<Human>(1);
-    Game g(p1, p2);
-    g.run(2);
+    //auto p1 = make_shared<Individual>(1);
+    //p1->load("resources/individuals/2014-04-20-18-27-07");
+    //auto p2 = make_shared<MinMax>(2);
+    //for (int i = 0; i < 100; ++i)
+    //{
+        //Game g(p1, p2);
+        //g.run(2);
+    //}
 
     return 0;
 }

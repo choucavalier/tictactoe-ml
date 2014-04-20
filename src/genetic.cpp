@@ -6,6 +6,7 @@
 #include "utils/make_unique.h"
 #include "genetic.h"
 #include "game.h"
+#include "players/minmax.h"
 
 using namespace std;
 
@@ -57,15 +58,16 @@ void Genetic::next_gen()
     for (auto p1 : *this->population)
     {
         int losses = 0, won = 0, draw = 0;
-        for (auto p2 : *this->population)
+
+        auto minmax = make_shared<MinMax>(1);
+
+        for (int i = 0; i < 100; ++i)
         {
-            if (&(*p1) == &(*p2))
-                continue;
             int pid = rand() % 2 + 1;
             int oid = pid == 1 ? 2 : 1;
             p1->set_id(pid);
-            p2->set_id(oid);
-            Game g(p1, p2);
+            minmax->set_id(oid);
+            Game g(p1, minmax);
             g.run();
             if (g.get_winner_id() == oid)
                 losses++;
@@ -74,18 +76,37 @@ void Genetic::next_gen()
             else
                 draw++;
         }
+
+        //for (auto p2 : *this->population)
+        //{
+            //if (&(*p1) == &(*p2))
+                //continue;
+            //int pid = rand() % 2 + 1;
+            //int oid = pid == 1 ? 2 : 1;
+            //p1->set_id(pid);
+            //p2->set_id(oid);
+            //Game g(p1, p2);
+            //g.run();
+            //if (g.get_winner_id() == oid)
+                //losses++;
+            //else if (g.get_winner_id() == pid)
+                //won++;
+            //else
+                //draw++;
+        //}
+
         counts[p1] = tuple<int, int, int>(draw, won, losses);
     }
-    auto countdraw = map<int, int>();
-    auto countlost = map<int, int>();
-    auto countwin = map<int, int>();
+    //auto countdraw = map<int, int>();
+    //auto countlost = map<int, int>();
+    //auto countwin = map<int, int>();
 
-    for (auto& e : counts)
-    {
-        countdraw[get<0>(e.second)]++;
-        countlost[get<1>(e.second)]++;
-        countwin[get<2>(e.second)]++;
-    }
+    //for (auto& e : counts)
+    //{
+        //countdraw[get<0>(e.second)]++;
+        //countlost[get<1>(e.second)]++;
+        //countwin[get<2>(e.second)]++;
+    //}
 
     this->sum_fitness = 0;
     for (auto& e : counts)
