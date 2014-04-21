@@ -19,8 +19,8 @@ MinMax::~MinMax()
 
 short MinMax::get_move(shared_ptr<Board> board) const
 {
-    if (this->cache->count(board->get_map()))
-        return this->cache->at(board->get_map());
+    //if (this->cache->count(board->get_map()))
+        //return this->cache->at(board->get_map());
     short move;
     int score;
     tie(move, score) = this->max(board);

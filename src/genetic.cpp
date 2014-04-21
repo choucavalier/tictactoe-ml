@@ -15,7 +15,7 @@ const double Genetic::R = 0.6;
 const double Genetic::M = 0.08;
 
 Genetic::Genetic() : population(make_unique<vector<shared_ptr<Individual>>>()),
-    max_fitness(0), min_fitness(10000),
+    max_fitness(-10000), min_fitness(10000),
     history(make_unique<vector<HistoryEntry>>()),
     teacher(make_shared<MinMax>(1))
 {
@@ -33,7 +33,7 @@ Genetic::~Genetic()
 void Genetic::run()
 {
     int generations = 0;
-    while (generations < 200 && this->max_fitness < 95)
+    while (generations < 200 && this->max_fitness < 99)
     {
         this->next_gen();
         HistoryEntry entry;
